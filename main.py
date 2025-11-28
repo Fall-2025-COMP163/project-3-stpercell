@@ -248,6 +248,24 @@ def game_menu():
     
     Returns: Integer choice (1-6)
     """
+    while True:
+        print("\n====== GAME MENU ======")
+        print("1. View Character Stats")
+        print("2. View Inventory")
+        print("3. Quest Menu")
+        print("4. Explore (Find Battles)")
+        print("5. Shop")
+        print("6. Save and Quit")
+
+        choice = input("Enter your choice (1-6): ").strip()
+
+        # Validate input
+        if choice.isdigit():
+            choice = int(choice)
+            if 1 <= choice <= 6:
+                return choice
+
+        print("Invalid choice. Please enter a number between 1 and 6.")
     # TODO: Implement game menu
     pass
 
@@ -263,12 +281,122 @@ def view_character_stats():
     # Show: name, class, level, health, stats, gold, etc.
     # Use character_manager functions
     # Show quest progress using quest_handler
+    if current_character is None:
+        print("No character loaded.")
+        return
+
+    print("\n======= CHARACTER STATS =======")
+
+    # Basic info
+    print(f"Name: {current_character.name}")
+    print(f"Class: {current_character.class_name}")
+    print(f"Level: {current_character.level}")
+
+    # Health
+    if hasattr(current_character, "max_health"):
+        print(f"Health: {current_character.health}/{current_character.max_health}")
+    else:
+        print(f"Health: {current_character.health}")
+
+    # Stats (only show stats the character actually has)
+    print("\n--- Attributes ---")
+    for attr in ["strength", "dexterity", "intelligence", "defense", "speed"]:
+        if hasattr(current_character, attr):
+            print(f"{attr.capitalize()}: {getattr(current_character, attr)}")
+
+    # Gold
+    if hasattr(current_character, "gold"):
+        print(f"\nGold: {current_character.gold}")
+
+    # Quests
+    print("\n--- Quest Progress ---")
+    try:
+        quests = quest_handler.get_quests(current_character)
+        if quests:
+            for q in quests:
+                print(f"- {q}")
+        else:
+            print("No active quests.")
+    except Exception:
+        print("Failed to load quests.")
+    print("===============================\n")
     pass
 
 def view_inventory():
     """Display and manage inventory"""
     global current_character, all_items
-    
+    if current_character is None:
+        print("No character loaded.")
+        return
+
+    while True:
+        print("\n======= INVENTORY =======")
+
+        # Get inventory list
+        try:
+            inv = inventory_system.get_inventory(current_character)
+        except Exception:
+            print("Error: inventory could not be loaded.")
+            return
+
+        if not inv:
+            print("Your inventory is empty.")
+        else:
+            for i, item in enumerate(inv, start=1):
+                print(f"{i}. {item}")
+
+        print("\nOptions:")
+        print("1. Use Item")
+        print("2. Equip Item (Weapon/Armor)")
+        print("3. Drop Item")
+        print("4. Return to Game Menu")
+
+        choice = input("Select an option (1-4): ").strip()
+
+        # Exit inventory
+        if choice == "4":
+            return
+        # Must have items to continue
+        if not inv:
+            print("No items to manage.")
+            continue
+        # Select an item first (for use, equip, drop)
+        item_index = input("Select an item number: ").strip()
+        if not item_index.isdigit() or not (1 <= int(item_index) <= len(inv)):
+            print("Invalid item number.")
+            continue
+
+        item_index = int(item_index) - 1
+        selected_item = inv[item_index]
+
+        # OPTION 1: USE ITEM
+        if choice == "1":
+            try:
+                inventory_system.use_item(current_character, selected_item)
+                print(f"You used {selected_item}.")
+            except Exception as e:
+                print(f"Cannot use item: {e}")
+
+        # OPTION 2: EQUIP
+        elif choice == "2":
+            try:
+                inventory_system.equip_item(current_character, selected_item)
+                print(f"You equipped {selected_item}.")
+            except Exception as e:
+                print(f"Cannot equip item: {e}")
+
+        # OPTION 3: DROP
+        elif choice == "3":
+            confirm = input(f"Drop {selected_item}? (y/n): ").strip().lower()
+            if confirm == "y":
+                try:
+                    inventory_system.remove_item(current_character, selected_item)
+                    print(f"{selected_item} was dropped.")
+                except Exception as e:
+                    print(f"Cannot drop item: {e}")
+
+        else:
+            print("Invalid option. Choose 1–4.")
     # TODO: Implement inventory menu
     # Show current inventory
     # Options: Use item, Equip weapon/armor, Drop item
@@ -279,6 +407,156 @@ def quest_menu():
     """Quest management menu"""
     global current_character, all_quests
     
+    if current_character is None:
+        print("No character loaded.")
+        return
+
+    while True:
+        print("\n======= QUEST MENU =======")
+        print("1. View Active Quests")
+        print("2. View Available Quests")
+        print("3. View Completed Quests")
+        print("4. Accept Quest")
+        print("5. Abandon Quest")
+        print("6. Complete Quest (Testing)")
+        print("7. Back to Game Menu")
+        
+        choice = input("Select an option (1-7): ").strip()
+
+        # ------------------------
+        #   OPTION 7: EXIT MENU
+        # ------------------------
+        if choice == "7":
+            return
+
+        # ------------------------
+        #  OPTION 1: ACTIVE QUESTS
+        # ------------------------
+        if choice == "1":
+            try:
+                active = quest_handler.get_active_quests(current_character)
+                print("\n--- Active Quests ---")
+                if active:
+                    for q in active:
+                        print(f"- {q}")
+                else:
+                    print("No active quests.")
+            except Exception as e:
+                print(f"Error loading active quests: {e}")
+
+        # ------------------------
+        #  OPTION 2: AVAILABLE QUESTS
+        # ------------------------
+        elif choice == "2":
+            try:
+                available = quest_handler.get_available_quests(current_character)
+                print("\n--- Available Quests ---")
+                if available:
+                    for q in available:
+                        print(f"- {q}")
+                else:
+                    print("No quests available right now.")
+            except Exception as e:
+                print(f"Error loading available quests: {e}")
+
+        # ------------------------
+        #  OPTION 3: COMPLETED QUESTS
+        # ------------------------
+        elif choice == "3":
+            try:
+                completed = quest_handler.get_completed_quests(current_character)
+                print("\n--- Completed Quests ---")
+                if completed:
+                    for q in completed:
+                        print(f"- {q}")
+                else:
+                    print("No quests completed yet.")
+            except Exception as e:
+                print(f"Error loading completed quests: {e}")
+
+        # ------------------------
+        #  OPTION 4: ACCEPT QUEST
+        # ------------------------
+        elif choice == "4":
+            try:
+                available = quest_handler.get_available_quests(current_character)
+                if not available:
+                    print("No quests available to accept.")
+                    continue
+
+                print("\nChoose a quest to accept:")
+                for i, q in enumerate(available, start=1):
+                    print(f"{i}. {q}")
+
+                selection = input("Enter quest number: ").strip()
+                if not selection.isdigit() or not (1 <= int(selection) <= len(available)):
+                    print("Invalid selection.")
+                    continue
+
+                quest_name = available[int(selection) - 1]
+
+                quest_handler.accept_quest(current_character, quest_name)
+                print(f"Quest '{quest_name}' accepted!")
+
+            except Exception as e:
+                print(f"Error accepting quest: {e}")
+
+        # ------------------------
+        #  OPTION 5: ABANDON QUEST
+        # ------------------------
+        elif choice == "5":
+            try:
+                active = quest_handler.get_active_quests(current_character)
+                if not active:
+                    print("No active quests to abandon.")
+                    continue
+
+                print("\nChoose a quest to abandon:")
+                for i, q in enumerate(active, start=1):
+                    print(f"{i}. {q}")
+
+                selection = input("Enter quest number: ").strip()
+                if not selection.isdigit() or not (1 <= int(selection) <= len(active)):
+                    print("Invalid selection.")
+                    continue
+
+                quest_name = active[int(selection) - 1]
+
+                quest_handler.abandon_quest(current_character, quest_name)
+                print(f"Quest '{quest_name}' abandoned.")
+
+            except Exception as e:
+                print(f"Error abandoning quest: {e}")
+
+        # ------------------------
+        #  OPTION 6: COMPLETE QUEST (TESTING)
+        # ------------------------
+        elif choice == "6":
+            try:
+                active = quest_handler.get_active_quests(current_character)
+                if not active:
+                    print("No active quests to complete.")
+                    continue
+
+                print("\nChoose a quest to complete:")
+                for i, q in enumerate(active, start=1):
+                    print(f"{i}. {q}")
+
+                selection = input("Enter quest number: ").strip()
+                if not selection.isdigit() or not (1 <= int(selection) <= len(active)):
+                    print("Invalid selection.")
+                    continue
+
+                quest_name = active[int(selection) - 1]
+
+                quest_handler.complete_quest(current_character, quest_name)
+                print(f"TEST: Quest '{quest_name}' marked as completed.")
+
+            except Exception as e:
+                print(f"Error completing quest: {e}")
+
+        else:
+            print("Invalid option. Choose 1–7.")
     # TODO: Implement quest menu
     # Show:
     #   1. View Active Quests
@@ -295,6 +573,62 @@ def explore():
     """Find and fight random enemies"""
     global current_character
     
+    if current_character is None:
+        print("No character loaded.")
+        return
+
+    print("\n=== EXPLORING THE WILDERNESS ===")
+    print("You wander into the unknown...")
+
+    try:
+        # Generate an enemy scaled to character level
+        enemy = combat_system.generate_enemy(current_character.level)
+        print(f"A wild {enemy.name} appears! (Level {enemy.level})")
+    except Exception as e:
+        print(f"Error generating enemy: {e}")
+        return
+
+    try:
+        # Start a SimpleBattle combat sequence
+        battle = combat_system.SimpleBattle(current_character, enemy)
+        result = battle.start()
+
+        # Combat result will be: "win", "lose", or "run"
+        if result == "win":
+            print(f"\nYou defeated the {enemy.name}!")
+
+            # Rewards
+            xp = enemy.xp_reward
+            gold = enemy.gold_reward
+
+            # Give XP + gold
+            try:
+                current_character.gain_xp(xp)
+            except Exception:
+                pass  # If XP function not implemented yet
+
+            if hasattr(current_character, "gold"):
+                current_character.gold += gold
+
+            print(f"You earned {xp} XP and {gold} gold!")
+
+        elif result == "lose":
+            print(f"\nThe {enemy.name} defeated you!")
+            print("You wake up at camp with 1 HP remaining...")
+
+            # Prevent softlock (revive)
+            current_character.health = 1  
+
+        elif result == "run":
+            print("\nYou managed to escape safely.")
+
+        else:
+            print("\nCombat ended unexpectedly.")
+
+    except Exception as e:
+        print(f"Combat error: {e}")
+        return
+    
     # TODO: Implement exploration
     # Generate random enemy based on character level
     # Start combat with combat_system.SimpleBattle
@@ -305,7 +639,104 @@ def explore():
 def shop():
     """Shop menu for buying/selling items"""
     global current_character, all_items
-    
+
+    if current_character is None:
+        print("No character loaded.")
+        return
+    # Example shop inventory
+    # all_items should be a dictionary: { "Item Name": {"price": X, "type": "consumable/weapon/armor"} }
+    if not all_items:
+        print("The shop has no items available.")
+        return
+
+    while True:
+        print("\n======= SHOP =======")
+        print(f"Your Gold: {current_character.gold}")
+        print("\nItems for Sale:")
+
+        item_list = list(all_items.keys())
+        for i, item_name in enumerate(item_list, start=1):
+            price = all_items[item_name]["price"]
+            print(f"{i}. {item_name} - {price} gold")
+
+        print("\nOptions:")
+        print("1. Buy Item")
+        print("2. Sell Item")
+        print("3. Back")
+
+        choice = input("Choose an option (1-3): ").strip()
+
+        # -----------------------------
+        #      OPTION 3: EXIT SHOP
+        # -----------------------------
+        if choice == "3":
+            return
+
+        # -----------------------------
+        #      OPTION 1: BUY
+        # -----------------------------
+        elif choice == "1":
+            selection = input("Enter item number to buy: ").strip()
+
+            if not selection.isdigit() or not (1 <= int(selection) <= len(item_list)):
+                print("Invalid selection.")
+                continue
+
+            item_name = item_list[int(selection) - 1]
+            item_price = all_items[item_name]["price"]
+
+            # Check gold
+            if current_character.gold < item_price:
+                print("You don't have enough gold.")
+                continue
+
+            # Attempt to add item
+            try:
+                inventory_system.add_item(current_character, item_name)
+                current_character.gold -= item_price
+                print(f"You bought {item_name} for {item_price} gold.")
+            except Exception as e:
+                print(f"Cannot buy item: {e}")
+
+        # -----------------------------
+        #      OPTION 2: SELL
+        # -----------------------------
+        elif choice == "2":
+            try:
+                inv = inventory_system.get_inventory(current_character)
+            except Exception:
+                print("Error: unable to load your inventory.")
+                continue
+
+            if not inv:
+                print("You have no items to sell.")
+                continue
+
+            print("\nYour Inventory:")
+            for i, item in enumerate(inv, start=1):
+                # Sell price = half buy price (safe default)
+                sell_price = all_items[item]["price"] // 2 if item in all_items else 1
+                print(f"{i}. {item} - Sell Price: {sell_price}")
+
+            selection = input("Enter item number to sell: ").strip()
+
+            if not selection.isdigit() or not (1 <= int(selection) <= len(inv)):
+                print("Invalid selection.")
+                continue
+
+            item_name = inv[int(selection) - 1]
+            sell_price = all_items[item_name]["price"] // 2 if item_name in all_items else 1
+
+            # Remove item and give gold
+            try:
+                inventory_system.remove_item(current_character, item_name)
+                current_character.gold += sell_price
+                print(f"You sold {item_name} for {sell_price} gold.")
+            except Exception as e:
+                print(f"Cannot sell item: {e}")
+
+        else:
+            print("Invalid choice. Choose 1–3.")
     # TODO: Implement shop
     # Show available items for purchase
     # Show current gold
