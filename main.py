@@ -2,7 +2,7 @@
 COMP 163 - Project 3: Quest Chronicles
 Main Game Module - Starter Code
 
-Name: [Your Name Here]
+Name: [Shikel Percell]
 
 AI Usage: [Document any AI assistance used]
 
@@ -48,6 +48,20 @@ def main_menu():
     # Get user input
     # Validate input (1-3)
     # Return choice
+    while True:
+        print("\n====== MAIN MENU ======")
+        print("1. New Game")
+        print("2. Load Game")
+        print("3. Exit")
+        
+        choice = input("Enter your choice (1-3): ").strip()
+        # Validate input
+        if choice.isdigit():
+            choice = int(choice)
+            if 1 <= choice <= 3:
+                return choice
+        # If invalid, show error and ask again
+        print("Invalid choice. Please enter 1, 2, or 3.")
     pass
 
 def new_game():
@@ -61,7 +75,39 @@ def new_game():
     Creates character and starts game loop
     """
     global current_character
+    print("\n=== NEW GAME ===")
+    # Get name
+    name = input("Enter your character's name: ").strip()
+    # Get class
+    print("\nChoose a class:")
+    print("1. Warrior")
+    print("2. Mage")
+    print("3. Rogue")
     
+    class_map = {
+        "1": "Warrior",
+        "2": "Mage",
+        "3": "Rogue"
+    }
+    
+    class_choice = None
+    while class_choice not in class_map:
+        class_choice = input("Enter class number (1-3): ").strip()
+        if class_choice not in class_map:
+            print("Invalid choice. Please enter 1–3.")
+
+    selected_class = class_map[class_choice]
+
+    # Create character
+    try:
+        current_character = character_manager.create_character(name, selected_class)
+        print(f"\nCharacter '{name}' the {selected_class} created successfully!")
+    except InvalidCharacterClassError:
+        print("Error: That class does not exist.")
+        return
+
+    # Start game loop
+    start_game_loop()
     # TODO: Implement new game creation
     # Get character name from user
     # Get character class from user
@@ -79,6 +125,44 @@ def load_game():
     Prompts user to select one
     """
     global current_character
+    print("\n=== LOAD GAME ===")
+
+    # Get list of saved characters
+    saved = character_manager.list_saved_characters()
+
+    if not saved:
+        print("No saved games found.")
+        return
+
+    print("\nSaved Characters:")
+    for i, name in enumerate(saved, start=1):
+        print(f"{i}. {name}")
+
+    # Select a file
+    choice = None
+    while True:
+        choice = input("Select a character number: ").strip()
+        if choice.isdigit():
+            choice = int(choice)
+            if 1 <= choice <= len(saved):
+                break
+        print("Invalid input. Choose a valid character number.")
+
+    selected_name = saved[choice - 1]
+
+    # Load character
+    try:
+        current_character = character_manager.load_character(selected_name)
+        print(f"\nLoaded character '{selected_name}' successfully!")
+    except CharacterNotFoundError:
+        print("Error: Save file not found.")
+        return
+    except SaveFileCorruptedError:
+        print("Error: Save file is corrupted and cannot be loaded.")
+        return
+
+    # Start game loop
+    start_game_loop()
     
     # TODO: Implement game loading
     # Get list of saved characters
@@ -98,9 +182,50 @@ def game_loop():
     Main game loop - shows game menu and processes actions
     """
     global game_running, current_character
-    
+    if current_character is None:
+        print("Error: No character loaded!")
+        return
     game_running = True
     
+    print(f"\n=== Welcome, {current_character.name}! Your adventure begins. ===")
+
+    while game_running:
+        print("\n===== GAME MENU =====")
+        print("1. View Character")
+        print("2. Inventory")
+        print("3. Quests")
+        print("4. Combat")
+        print("5. Save Game")
+        print("6. Exit to Main Menu")
+
+        choice = input("Choose an option (1-6): ").strip()
+
+        if choice == "1":
+            print("\n--- CHARACTER INFO ---")
+            print(current_character)
+
+        elif choice == "2":
+            handle_inventory_menu()
+
+        elif choice == "3":
+            handle_quest_menu()
+
+        elif choice == "4":
+            handle_combat_menu()
+
+        elif choice == "5":
+            try:
+                character_manager.save_character(current_character)
+                print("Game saved successfully!")
+            except Exception:
+                print("Error: Failed to save game.")
+
+        elif choice == "6":
+            print("Returning to main menu...")
+            game_running = False
+
+        else:
+            print("Invalid option. Enter 1–6.")
     # TODO: Implement game loop
     # While game_running:
     #   Display game menu
