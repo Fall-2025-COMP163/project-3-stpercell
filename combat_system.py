@@ -160,7 +160,7 @@ class SimpleBattle:
             xp = self.enemy.get("xp_reward", 0)
             gold = self.enemy.get("gold_reward", 0)
             
-        return {"winner": "player", "xp_gained": xp, "gold_gained": gold}
+    return {"winner": "player", "xp_gained": xp, "gold_gained": gold}
 
         # Enemy's turn: simple attack
         damage_to_player = self.enemy.get("strength", 0)
