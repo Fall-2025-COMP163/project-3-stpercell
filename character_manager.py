@@ -166,6 +166,62 @@ def load_character(character_name, save_directory="data/save_games"):
     # Try to read file → SaveFileCorruptedError
     # Validate data format → InvalidSaveDataError
     # Parse comma-separated lists back into Python lists
+    
+    filepath = os.path.join(save_directory, f"{character_name}_save.txt")
+
+    # --- Check if save file exists ---
+    if not os.path.isfile(filepath):
+        raise CharacterNotFoundError(f"No save file found for '{character_name}'.")
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception as e:
+        raise SaveFileCorruptedError(f"Could not read save file: {e}")
+
+    # --- Parse file ---
+    character = {}
+
+    expected_fields = {
+        "NAME", "CLASS", "LEVEL", "HEALTH", "MAX_HEALTH",
+        "STRENGTH", "MAGIC", "EXPERIENCE", "GOLD",
+        "INVENTORY", "ACTIVE_QUESTS", "COMPLETED_QUESTS"
+    }
+
+    for line in lines:
+        if ":" not in line:
+            raise InvalidSaveDataError("Malformed line in save file.")
+
+        key, value = line.strip().split(":", 1)
+        key = key.strip().upper()
+        value = value.strip()
+
+        # Validate field name
+        if key not in expected_fields:
+            raise InvalidSaveDataError(f"Unexpected field: {key}")
+
+        # Convert numerical fields
+        if key in {"LEVEL", "HEALTH", "MAX_HEALTH", "STRENGTH", "MAGIC", "EXPERIENCE", "GOLD"}:
+            if not value.isdigit():
+                raise InvalidSaveDataError(f"Invalid value for {key}: {value}")
+            character[key.lower()] = int(value)
+
+        # Convert list fields
+        elif key in {"INVENTORY", "ACTIVE_QUESTS", "COMPLETED_QUESTS"}:
+            if value == "":
+                character[key.lower()] = []
+            else:
+                character[key.lower()] = value.split(",")
+
+        # Normal string fields
+        else:
+            character[key.lower()] = value
+
+    # --- Final validation ---
+    missing = expected_fields - {k.upper() for k in character.keys()}
+    if missing:
+        raise InvalidSaveDataError(f"Missing fields: {missing}")
+    return character
     pass
 
 def list_saved_characters(save_directory="data/save_games"):
@@ -177,6 +233,17 @@ def list_saved_characters(save_directory="data/save_games"):
     # TODO: Implement this function
     # Return empty list if directory doesn't exist
     # Extract character names from filenames
+    
+    if not os.path.isdir(save_directory):
+        return []
+
+    characters = []
+
+    for filename in os.listdir(save_directory):
+        if filename.endswith("_save.txt"):
+            characters.append(filename.replace("_save.txt", ""))
+
+    return characters
     pass
 
 def delete_character(character_name, save_directory="data/save_games"):
@@ -188,6 +255,15 @@ def delete_character(character_name, save_directory="data/save_games"):
     """
     # TODO: Implement character deletion
     # Verify file exists before attempting deletion
+    filepath = os.path.join(save_directory, f"{character_name}_save.txt")
+
+    # Check if save exists
+    if not os.path.isfile(filepath):
+        raise CharacterNotFoundError(f"No save file found for '{character_name}'.")
+
+    # Delete file
+    os.remove(filepath)
+    return True
     pass
 
 # ============================================================================
