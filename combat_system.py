@@ -142,7 +142,7 @@ class SimpleBattle:
         # Loop until someone dies
         # Award XP and gold if player wins
         if self.character.get("health", 0) <= 0:
-        raise CharacterDeadError(f"{self.character.get('name', 'Character')} is dead and cannot fight.")
+            raise CharacterDeadError(f"{self.character.get('name', 'Character')} is dead and cannot fight.")
 
     self.combat_active = True
 
