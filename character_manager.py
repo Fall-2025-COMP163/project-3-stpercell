@@ -289,6 +289,35 @@ def gain_experience(character, xp_amount):
     # Add experience
     # Check for level up (can level up multiple times)
     # Update stats on level up
+     # Cannot gain XP if dead
+    
+    if character["health"] <= 0:
+        raise CharacterDeadError("Character is dead and cannot gain experience.")
+
+    # Add XP
+    character["experience"] += xp_amount
+    print(f"\n+{xp_amount} XP gained!")
+
+    # Check for level-ups (may happen multiple times)
+    leveled_up = False
+
+    while character["experience"] >= character["level"] * 100:
+        character["experience"] -= character["level"] * 100
+        character["level"] += 1
+        leveled_up = True
+
+        # Stat increases
+        character["max_health"] += 10
+        character["strength"] += 2
+        character["magic"] += 2
+
+        # Heal to full on level up
+        character["health"] = character["max_health"]
+
+        print(f"\n🎉 LEVEL UP! You are now level {character['level']}!")
+        print(f"+10 Max Health, +2 Strength, +2 Magic")
+
+    return leveled_up
     pass
 
 def add_gold(character, amount):
@@ -305,6 +334,22 @@ def add_gold(character, amount):
     # TODO: Implement gold management
     # Check that result won't be negative
     # Update character's gold
+      # Ensure character has a gold field
+    
+    if "gold" not in character:
+        raise KeyError("Character dictionary must contain a 'gold' field.")
+
+    new_gold = character["gold"] + amount
+
+    # Prevent negative gold
+    if new_gold < 0:
+        raise ValueError(
+            f"Cannot remove {abs(amount)} gold — result would be negative."
+        )
+
+    # Update gold
+    character["gold"] = new_gold
+    return new_gold
     pass
 
 def heal_character(character, amount):
@@ -318,6 +363,23 @@ def heal_character(character, amount):
     # TODO: Implement healing
     # Calculate actual healing (don't exceed max_health)
     # Update character health
+    
+    if amount < 0:
+        raise ValueError("Healing amount cannot be negative.")
+
+    current_hp = character.get("health")
+    max_hp = character.get("max_health")
+
+    if current_hp is None or max_hp is None:
+        raise KeyError("Character must have 'health' and 'max_health' fields.")
+
+    # Calculate heal without exceeding max health
+    heal_amount = min(amount, max_hp - current_hp)
+
+    # Apply healing
+    character["health"] = current_hp + heal_amount
+
+    return heal_amount
     pass
 
 def is_character_dead(character):
@@ -327,6 +389,11 @@ def is_character_dead(character):
     Returns: True if dead, False if alive
     """
     # TODO: Implement death check
+    
+    if "health" not in character:
+        raise KeyError("Character dictionary must contain a 'health' field.")
+    
+    return character["health"] <= 0
     pass
 
 def revive_character(character):
@@ -337,6 +404,18 @@ def revive_character(character):
     """
     # TODO: Implement revival
     # Restore health to half of max_health
+    
+    if "health" not in character or "max_health" not in character:
+        raise KeyError("Character must have 'health' and 'max_health' fields.")
+
+    # Only revive if dead
+    if character["health"] > 0:
+        return False  # Already alive
+
+    # Restore to 50% of max health (rounded down)
+    character["health"] = max(1, character["max_health"] // 2)
+
+    return True
     pass
 
 # ============================================================================
@@ -358,6 +437,36 @@ def validate_character_data(character):
     # Check all required keys exist
     # Check that numeric values are numbers
     # Check that lists are actually lists
+    
+    required_fields = {
+        "name": str,
+        "class": str,
+        "level": int,
+        "health": int,
+        "max_health": int,
+        "strength": int,
+        "magic": int,
+        "experience": int,
+        "gold": int,
+        "inventory": list,
+        "active_quests": list,
+        "completed_quests": list,
+    }
+    # --- Check required fields exist ---
+    for field, expected_type in required_fields.items():
+        if field not in character:
+            raise InvalidSaveDataError(f"Missing required field: {field}")
+
+        value = character[field]
+
+        # --- Type validation ---
+        if not isinstance(value, expected_type):
+            raise InvalidSaveDataError(
+                f"Invalid type for '{field}': expected {expected_type.__name__}, "
+                f"got {type(value).__name__}"
+            )
+
+    return True
     pass
 
 # ============================================================================
@@ -390,4 +499,40 @@ if __name__ == "__main__":
     #     print("Character not found")
     # except SaveFileCorruptedError:
     #     print("Save file corrupted")
+if __name__ == "__main__":
+    print("=== CHARACTER MANAGER TEST ===")
+    print("\n[TEST] Creating character...")
+    try:
+        char = create_character("LeGoat", "Warrior")
+        print(f"Created: {char['name']} the {char['class']}")
+        print(f"Stats: HP={char['health']}, STR={char['strength']}, MAG={char['magic']}")
+    except InvalidCharacterClassError as e:
+        print(f"Character creation failed: {e}")
+        char = None
+
+    # If creation failed, do not proceed
+    if char is not None:
+
+        # Test saving the character
+        print("\n[TEST] Saving character...")
+        try:
+            save_character(char)
+            print("Character saved successfully.")
+        except Exception as e:
+            print(f"Save error: {e}")
+
+        # Test loading the character
+        print("\n[TEST] Loading character...")
+        try:
+            loaded = load_character("TestHero")
+            print(f"Loaded: {loaded['name']} the {loaded['class']}")
+            print(f"Loaded Stats: HP={loaded['health']}, STR={loaded['strength']}, MAG={loaded['magic']}")
+        except CharacterNotFoundError:
+            print("Character not found.")
+        except SaveFileCorruptedError:
+            print("Save file corrupted.")
+        except InvalidSaveDataError as e:
+            print(f"Invalid save data: {e}")
+
+    print("\n=== TEST COMPLETE, Phenomenal ===")
 
