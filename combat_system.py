@@ -112,14 +112,7 @@ class SimpleBattle:
         # Store character and enemy
         # Set combat_active flag
         # Initialize turn counter
-        def __init__(self, character, enemy):
-        """
-        Initialize battle with character and enemy
-        
-        Args:
-            character: Character dictionary
-            enemy: Enemy dictionary
-        """
+    
         # Store references to character and enemy
         self.character = character
         self.enemy = enemy
