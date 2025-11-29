@@ -47,6 +47,45 @@ def create_character(name, character_class):
     # - inventory=[], active_quests=[], completed_quests=[]
     
     # Raise InvalidCharacterClassError if class not in valid list
+    # Valid class list
+    valid_classes = ["Warrior", "Mage", "Rogue", "Cleric"]
+    
+    # Validate class
+    if character_class not in valid_classes:
+        raise InvalidCharacterClassError(f"Invalid class: {character_class}")
+    
+    # Base stats per class
+    class_stats = {
+        "Warrior": {"health": 120, "strength": 15, "magic": 5},
+        "Mage":    {"health": 80,  "strength": 8,  "magic": 20},
+        "Rogue":   {"health": 90,  "strength": 12, "magic": 10},
+        "Cleric":  {"health": 100, "strength": 10, "magic": 15}
+    }
+    
+    stats = class_stats[character_class]
+
+    # Create character dictionary
+    character = {
+        "name": name,
+        "class": character_class,
+        "level": 1,
+        "experience": 0,
+        "gold": 100,
+        
+        # Stats
+        "health": stats["health"],
+        "max_health": stats["health"],
+        "strength": stats["strength"],
+        "magic": stats["magic"],
+        
+        # Collections
+        "inventory": [],
+        "active_quests": [],
+        "completed_quests": []
+    }
+    
+    return character
+    
     pass
 
 def save_character(character, save_directory="data/save_games"):
@@ -76,14 +115,44 @@ def save_character(character, save_directory="data/save_games"):
     # Create save_directory if it doesn't exist
     # Handle any file I/O errors appropriately
     # Lists should be saved as comma-separated values
+    # Ensure directory exists
+     # Build file path
+    filename = f"{character['name']}_save.txt"
+    filepath = os.path.join(save_directory, filename)
+    
+    # Convert lists → comma-separated strings
+    inventory_str = ",".join(character.get("inventory", []))
+    active_q_str = ",".join(character.get("active_quests", []))
+    completed_q_str = ",".join(character.get("completed_quests", []))
+    
+    # Build text content
+    save_text = (
+        f"NAME: {character['name']}\n"
+        f"CLASS: {character['class']}\n"
+        f"LEVEL: {character['level']}\n"
+        f"HEALTH: {character['health']}\n"
+        f"MAX_HEALTH: {character['max_health']}\n"
+        f"STRENGTH: {character['strength']}\n"
+        f"MAGIC: {character['magic']}\n"
+        f"EXPERIENCE: {character['experience']}\n"
+        f"GOLD: {character['gold']}\n"
+        f"INVENTORY: {inventory_str}\n"
+        f"ACTIVE_QUESTS: {active_q_str}\n"
+        f"COMPLETED_QUESTS: {completed_q_str}\n"
+    )
+    
+    # Write to file
+    with open(filepath, "w", encoding="utf-8") as save_file:
+        save_file.write(save_text)
+    
+    return True
     pass
 
 def load_character(character_name, save_directory="data/save_games"):
     """
     Load character from save file
-    
     Args:
-        character_name: Name of character to load
+        character_name: Name of character to load # Build file path
         save_directory: Directory containing save files
     
     Returns: Character dictionary
