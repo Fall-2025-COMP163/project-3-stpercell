@@ -253,7 +253,7 @@ def equip_weapon(character, item_id, item_data):
         message_parts.append(f"Unequipped {old_weapon}")
 
     # Parse new weapon effect
-    effect = item_data[item_id].get("effect", "")
+    effect = character["item_data"][equipped].get("effect", "")
     if ":" not in effect:
         raise InvalidItemTypeError(f"Invalid effect format for weapon '{item_id}'.")
 
@@ -303,11 +303,11 @@ def equip_armor(character, item_id, item_data):
 
     # Check correct item type
     item_type = item_data[item_id].get("type")
-    if item_type != "weapon":
-        raise InvalidItemTypeError(f"Item '{item_id}' is not a weapon.")
+    if item_type != "armor":
+        raise InvalidItemTypeError(f"Item '{item_id}' is not armor.")
 
     # Handle unequipping current weapon
-    old_weapon = character.get("equipped_weapon")
+    old_weapon = character.get("equipped_armor")
     message_parts = []
 
     if old_weapon:
@@ -322,7 +322,7 @@ def equip_armor(character, item_id, item_data):
         message_parts.append(f"Unequipped {old_weapon}")
 
     # Parse new weapon effect
-    effect = item_data[item_id].get("effect", "")
+    effect = character["item_data"][equipped].get("effect", "")
     if ":" not in effect:
         raise InvalidItemTypeError(f"Invalid effect format for weapon '{item_id}'.")
 
@@ -437,6 +437,25 @@ def purchase_item(character, item_id, item_data):
     # Check if inventory has space
     # Subtract gold from character
     # Add item to inventory
+    cost = item_data[item_id]["cost"]
+
+    # Check for enough gold
+    if character["gold"] < cost:
+        raise InsufficientResourcesError(
+            f"Not enough gold to purchase {item_id} (cost: {cost})"
+        )
+
+    # Check inventory space
+    if len(character["inventory"]) >= MAX_INVENTORY_SIZE:
+        raise InventoryFullError("Inventory is full, cannot purchase item.")
+
+    # Subtract gold
+    character["gold"] -= cost
+
+    # Add item to inventory
+    character["inventory"].append(item_id)
+
+    return True
     pass
 
 def sell_item(character, item_id, item_data):
@@ -456,6 +475,21 @@ def sell_item(character, item_id, item_data):
     # Calculate sell price (cost // 2)
     # Remove item from inventory
     # Add gold to character
+    # Check if character has the item
+    if item_id not in character.get("inventory", []):
+        raise ItemNotFoundError(f"Item '{item_id}' not found in inventory.")
+
+    # Calculate sell price (half of original cost)
+    cost = item_data.get(item_id, {}).get("cost", 0)
+    sell_price = cost // 2
+
+    # Remove item from inventory
+    character["inventory"].remove(item_id)
+
+    # Add gold to character
+    character["gold"] += sell_price
+
+    return sell_price
     pass
 
 # ============================================================================
@@ -475,6 +509,17 @@ def parse_item_effect(effect_string):
     # TODO: Implement effect parsing
     # Split on ":"
     # Convert value to integer
+    if ":" not in effect_string:
+        raise ValueError(f"Invalid effect format: '{effect_string}' (missing ':')")
+
+    stat_name, value_str = effect_string.split(":", 1)
+
+    try:
+        value = int(value_str)
+    except ValueError:
+        raise ValueError(f"Invalid effect value: '{value_str}' is not an integer")
+
+    return stat_name, value
     pass
 
 def apply_stat_effect(character, stat_name, value):
@@ -488,6 +533,19 @@ def apply_stat_effect(character, stat_name, value):
     # TODO: Implement stat application
     # Add value to character[stat_name]
     # If stat is health, ensure it doesn't exceed max_health
+    valid_stats = {"health", "max_health", "strength", "magic"}
+
+    if stat_name not in valid_stats:
+        raise ValueError(f"Invalid stat: '{stat_name}'")
+
+    # Initialize stat if missing
+    character[stat_name] = character.get(stat_name, 0) + value
+
+    # Ensure health does not exceed max_health
+    if stat_name == "health":
+        max_hp = character.get("max_health", character["health"])
+        if character["health"] > max_hp:
+            character["health"] = max_hp
     pass
 
 def display_inventory(character, item_data_dict):
@@ -503,6 +561,29 @@ def display_inventory(character, item_data_dict):
     # TODO: Implement inventory display
     # Count items (some may appear multiple times)
     # Display with item names from item_data_dict
+    from collections import Counter
+
+    inventory = character.get("inventory", [])
+
+    if not inventory:
+        print(f"{character['name']}'s inventory is empty.")
+        return
+
+    # Count each item
+    item_counts = Counter(inventory)
+
+    print(f"\n{character['name']}'s Inventory:")
+    print("-" * 40)
+    print(f"{'Item':<20} {'Type':<12} {'Qty':<4}")
+    print("-" * 40)
+
+    for item_id, qty in item_counts.items():
+        item_info = item_data_dict.get(item_id, {})
+        item_type = item_info.get("type", "Unknown")
+        item_name = item_info.get("name", item_id)
+        print(f"{item_name:<20} {item_type:<12} {qty:<4}")
+
+    print("-" * 40)
     pass
 
 # ============================================================================
