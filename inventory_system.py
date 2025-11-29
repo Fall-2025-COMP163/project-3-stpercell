@@ -179,7 +179,7 @@ def use_item(character, item_id, item_data):
         raise ItemNotFoundError(f"Item '{item_id}' not found in inventory.")
 
     # Check if item type is 'consumable'
-    item_type = item_data[item_id].get("type")
+    item_data.get("cost")
     if item_type != "consumable":
         raise InvalidItemTypeError(f"Item '{item_id}' is not a consumable item.")
 
@@ -253,7 +253,7 @@ def equip_weapon(character, item_id, item_data):
         message_parts.append(f"Unequipped {old_weapon}")
 
     # Parse new weapon effect
-    effect = character["item_data"][equipped].get("effect", "")
+    effect = item_data.get("effect", "")
     if ":" not in effect:
         raise InvalidItemTypeError(f"Invalid effect format for weapon '{item_id}'.")
 
@@ -322,7 +322,7 @@ def equip_armor(character, item_id, item_data):
         message_parts.append(f"Unequipped {old_weapon}")
 
     # Parse new weapon effect
-    effect = character["item_data"][equipped].get("effect", "")
+    effect = item_data.get("effect", "")
     if ":" not in effect:
         raise InvalidItemTypeError(f"Invalid effect format for weapon '{item_id}'.")
 
@@ -437,7 +437,7 @@ def purchase_item(character, item_id, item_data):
     # Check if inventory has space
     # Subtract gold from character
     # Add item to inventory
-    cost = item_data[item_id]["cost"]
+    cost = item_data.get("cost")
 
     # Check for enough gold
     if character["gold"] < cost:
