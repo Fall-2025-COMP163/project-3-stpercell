@@ -755,6 +755,23 @@ def save_game():
     # TODO: Implement save
     # Use character_manager.save_character()
     # Handle any file I/O exceptions
+    if current_character is None:
+        print("No character loaded. Cannot save game.")
+        return False
+
+    try:
+        # Save character using character_manager
+        character_manager.save_character(current_character)
+        print(f"Game saved successfully for '{current_character['name']}'!")
+        return True
+    except FileNotFoundError:
+        print("Error: Save directory not found.")
+    except PermissionError:
+        print("Error: Insufficient permissions to save the game.")
+    except Exception as e:
+        print(f"An unexpected error occurred while saving: {e}")
+
+    return False
     pass
 
 def load_game_data():
@@ -766,6 +783,29 @@ def load_game_data():
     # Try to load items with game_data.load_items()
     # Handle MissingDataFileError, InvalidDataFormatError
     # If files missing, create defaults with game_data.create_default_data_files()
+    try:
+        # Attempt to load quests
+        all_quests = game_data.load_quests()
+    except (MissingDataFileError, InvalidDataFormatError) as e:
+        print(f"Warning: Could not load quest data ({e}). Creating default quests.")
+        game_data.create_default_data_files()
+        all_quests = game_data.load_quests()
+    except Exception as e:
+        print(f"Unexpected error loading quests: {e}")
+        all_quests = {}
+
+    try:
+        # Attempt to load items
+        all_items = game_data.load_items()
+    except (MissingDataFileError, InvalidDataFormatError) as e:
+        print(f"Warning: Could not load item data ({e}). Creating default items.")
+        game_data.create_default_data_files()
+        all_items = game_data.load_items()
+    except Exception as e:
+        print(f"Unexpected error loading items: {e}")
+        all_items = {}
+
+    print("Game data loaded successfully.")
     pass
 
 def handle_character_death():
@@ -777,6 +817,42 @@ def handle_character_death():
     # Offer: Revive (costs gold) or Quit
     # If revive: use character_manager.revive_character()
     # If quit: set game_running = False
+    if current_character is None:
+        print("Error: No character loaded!")
+        return
+
+    print("\n=== YOU HAVE DIED ===")
+    print(f"{current_character.name} has fallen in battle.")
+
+    while True:
+        print("\nOptions:")
+        print("1. Revive (Costs 50 gold)")
+        print("2. Quit to Main Menu")
+
+        choice = input("Enter your choice (1-2): ").strip()
+
+        if choice == "1":
+            # Check if character has enough gold
+            if getattr(current_character, "gold", 0) < 50:
+                print("Not enough gold to revive!")
+                continue
+
+            # Deduct gold
+            current_character.gold -= 50
+
+            # Revive character using character_manager
+            revived = character_manager.revive_character(current_character)
+            if revived:
+                print(f"{current_character.name} has been revived with 50% health!")
+                return  # Continue game loop
+            else:
+                print("Revival failed. Please try again.")
+        elif choice == "2":
+            print("Returning to main menu...")
+            game_running = False
+            return
+        else:
+            print("Invalid choice. Enter 1 or 2.")
     pass
 
 def display_welcome():
