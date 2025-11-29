@@ -179,12 +179,12 @@ def use_item(character, item_id, item_data):
         raise ItemNotFoundError(f"Item '{item_id}' not found in inventory.")
 
     # Check if item type is 'consumable'
-    item_data.get("cost")
+    item_type = item_data.get("type")
     if item_type != "consumable":
         raise InvalidItemTypeError(f"Item '{item_id}' is not a consumable item.")
 
     # Parse effect string (format: "stat:value")
-    effect_str = item_data[item_id].get("effect", "")
+    effect_str = item_data.get("effect", "")
     if ":" not in effect_str:
         raise InvalidItemTypeError(f"Invalid effect format for item '{item_id}'.")
 
@@ -198,7 +198,7 @@ def use_item(character, item_id, item_data):
     # Remove item from inventory
     character["inventory"].remove(item_id)
 
-    return f"{character['name']} used {item_id} and gained {value} {stat_name}."
+    return (f"{character.get('name', 'Character')} used {item_id} and gained {value} {stat_name}.")
     pass
 
 def equip_weapon(character, item_id, item_data):
