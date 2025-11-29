@@ -192,7 +192,7 @@ class SimpleBattle:
         # Get player choice
         # Execute chosen action
         if not self.combat_active:
-        raise CombatNotActiveError("Cannot take a turn because combat is not active.")
+            raise CombatNotActiveError("Cannot take a turn because combat is not active.")
 
     # Display player options
     print("\nYour turn! Choose an action:")
