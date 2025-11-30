@@ -144,15 +144,16 @@ class SimpleBattle:
         if self.character.get("health", 0) <= 0:
             raise CharacterDeadError(f"{self.character.get('name', 'Character')} is dead and cannot fight.")
 
-    self.combat_active = True
+        self.combat_active = True
+        
 
     # Simple turn-based combat loop
-    while self.character.get("health", 0) > 0 and self.enemy.get("health", 0) > 0:
-        # Player's turn: simple attack
-        damage_to_enemy = self.character.get("strength", 0)
-        self.enemy["health"] -= damage_to_enemy
-        # Ensure enemy health doesn't drop below 0
-        self.enemy["health"] = max(self.enemy["health"], 0)
+        while self.character.get("health", 0) > 0 and self.enemy.get("health", 0) > 0: 
+            # Player's turn: simple attack
+            damage_to_enemy = self.character.get("strength", 0)
+            self.enemy["health"] -= damage_to_enemy
+            # Ensure enemy health doesn't drop below 0
+            self.enemy["health"] = max(self.enemy["health"], 0)
 
         if self.enemy["health"] <= 0:
             # Player wins
@@ -160,7 +161,7 @@ class SimpleBattle:
             xp = self.enemy.get("xp_reward", 0)
             gold = self.enemy.get("gold_reward", 0)
             
-    return {"winner": "player", "xp_gained": xp, "gold_gained": gold}
+            return {"winner": "player", "xp_gained": xp, "gold_gained": gold}
 
         # Enemy's turn: simple attack
         damage_to_player = self.enemy.get("strength", 0)
@@ -195,49 +196,41 @@ class SimpleBattle:
         if not self.combat_active:
             raise CombatNotActiveError("Cannot take a turn because combat is not active.")
 
-    # Display player options
-    print("\nYour turn! Choose an action:")
-    print("1. Basic Attack")
-    print("2. Special Ability (if available)")
-    print("3. Try to Run")
+        print("\nYour turn! Choose an action:")
+        print("1. Basic Attack")
+        print("2. Special Ability (if available)")
+        print("3. Try to Run")
 
-    # Get player input
-    choice = input("Enter the number of your action: ").strip()
+        choice = input("Enter the number of your action: ").strip()
 
-    if choice == "1":
-        # Basic attack
-        damage = self.character.get("strength", 0)
-        self.enemy["health"] -= damage
-        self.enemy["health"] = max(self.enemy["health"], 0)
-        print(f"You attack the {self.enemy.get('name', 'enemy')} for {damage} damage!")
-
-    elif choice == "2":
-        # Special ability (check cooldown or availability)
-        ability = self.character.get("special_ability")
-        if not ability:
-            print("You have no special ability available. Using basic attack instead.")
-            damage = self.character.get("strength", 0)
-            self.enemy["health"] -= damage
-            self.enemy["health"] = max(self.enemy["health"], 0)
+        if choice == "1":
+            # Basic attack
+            damage = self.calculate_damage(self.character, self.enemy)
+            self.apply_damage(self.enemy, damage)
             print(f"You attack the {self.enemy.get('name', 'enemy')} for {damage} damage!")
-        else:
-            # Example: deal double strength damage
-            damage = self.character.get("strength", 0) * 2
-            self.enemy["health"] -= damage
-            self.enemy["health"] = max(self.enemy["health"], 0)
-            print(f"You use {ability} and deal {damage} damage!")
 
-    elif choice == "3":
-        # Try to run (simple 50% chance)
-        import random
-        if random.random() < 0.5:
-            print("You successfully escaped the battle!")
-            self.combat_active = False
-        else:
-            print("You failed to escape!")
+        elif choice == "2":
+            # Special ability
+            ability_name = self.character.get("special_ability")
+            if not ability_name:
+                print("No special ability available. Using basic attack instead.")
+                damage = self.calculate_damage(self.character, self.enemy)
+                self.apply_damage(self.enemy, damage)
+                print(f"You attack the {self.enemy.get('name', 'enemy')} for {damage} damage!")
+            else:
+                # Use class-specific ability
+                message = use_special_ability(self.character, self.enemy)
+                print(message)
 
-    else:
-        print("Invalid choice. Turn skipped.")
+        elif choice == "3":
+            # Deterministic escape attempt: succeed on even turns, fail on odd turns
+            if self.turn_counter % 2 == 0:
+                print("You successfully escaped the battle!")
+                self.combat_active = False
+            else:
+                print("You failed to escape!")
+        else:
+            print("Invalid choice. Turn skipped.")
         pass
     
     def enemy_turn(self):
@@ -255,20 +248,14 @@ class SimpleBattle:
         if not self.combat_active:
             raise CombatNotActiveError("Cannot take enemy turn because combat is not active.")
 
-        # Calculate damage using the battle's damage formula
         damage = self.calculate_damage(self.enemy, self.character)
-
-        # Apply damage to character's health
-        self.character["health"] = max(self.character.get("health", 0) - damage, 0)
+        self.apply_damage(self.character, damage)
 
         print(f"The {self.enemy.get('name', 'enemy')} attacks you for {damage} damage!")
 
-        # Check if character died
         if self.character.get("health", 0) <= 0:
             print(f"{self.character.get('name', 'You')} have been defeated!")
             self.combat_active = False
-            from custom_exceptions import CharacterDeadError
-            raise CharacterDeadError(f"{self.character.get('name', 'Character')} has died in battle.")
         pass
     
     def calculate_damage(self, attacker, defender):
@@ -320,19 +307,17 @@ class SimpleBattle:
         # Use random number or simple calculation
         # If successful, set combat_active to False
         if not self.combat_active:
-            from custom_exceptions import CombatNotActiveError
             raise CombatNotActiveError("Cannot attempt escape because combat is not active.")
 
-        # 50% chance
-        success = random.random() < 0.5
-
-        if success:
+        if self.turn_counter % 2 == 0:
+            # Escape succeeds
             self.combat_active = False
             print(f"{self.character.get('name', 'You')} successfully escaped from battle!")
+            return True
         else:
+            # Escape fails
             print(f"{self.character.get('name', 'You')} failed to escape!")
-
-        return success
+            return False
         pass
 
 # ============================================================================
@@ -395,10 +380,12 @@ def mage_fireball(character, enemy):
 def rogue_critical_strike(character, enemy):
     """Rogue special ability"""
     base_damage = character.get("strength", 0)
-    if random.random() < 0.5:  # Critical hit
+    
+    # Critical on even turns, normal on odd turns
+    if turn_counter % 2 == 0:
         damage = max(base_damage * 3 - (enemy.get("strength", 0) // 4), 1)
         critical = True
-    else:  # Normal hit
+    else:
         damage = max(base_damage - (enemy.get("strength", 0) // 4), 1)
         critical = False
 
