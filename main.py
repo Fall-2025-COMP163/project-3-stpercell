@@ -23,10 +23,10 @@ from custom_exceptions import *
 # ============================================================================
 
 # Global variables for game data
-current_character = None
-all_quests = {}
-all_items = {}
-game_running = False
+current_character = None #player object data
+all_quests = {} #dictionary of all quests loaded from files
+all_items = {} #dictionary of shop/items
+game_running = False #controls the game loop
 
 # ============================================================================
 # MAIN MENU
@@ -48,12 +48,14 @@ def main_menu():
     # Get user input
     # Validate input (1-3)
     # Return choice
+    
+    #options to choose in menu
     while True:
         print("\n====== MAIN MENU ======")
         print("1. New Game")
         print("2. Load Game")
         print("3. Exit")
-        
+        #user must select either 1, 2, 3
         choice = input("Enter your choice (1-3): ").strip()
         # Validate input
         if choice.isdigit():
@@ -79,6 +81,7 @@ def new_game():
     # Get name
     name = input("Enter your character's name: ").strip()
     # Get class
+    #if user chooses something that isn't in dict show a error message
     print("\nChoose a class:")
     print("1. Warrior")
     print("2. Mage")
@@ -118,6 +121,9 @@ def new_game():
     pass
 
 def load_game():
+    #Loads saved char
+    #shows if there are any available saves
+    #lets user choose save
     """
     Load an existing saved game
     
@@ -125,19 +131,21 @@ def load_game():
     Prompts user to select one
     """
     global current_character
+    #Global makes function modify the global version of current_character and not a new local one
     print("\n=== LOAD GAME ===")
 
     # Get list of saved characters
     saved = character_manager.list_saved_characters()
+    #Calls character_manager.list_saved_characters() to get a list of names of saved characters.
 
     if not saved:
         print("No saved games found.")
         return
-
+    #handles if now saves exist
     print("\nSaved Characters:")
     for i, name in enumerate(saved, start=1):
         print(f"{i}. {name}")
-
+    #Causes saved characters to start a list starting at 1 and going up dependent on number of saves
     # Select a file
     choice = None
     while True:
@@ -147,7 +155,8 @@ def load_game():
             if 1 <= choice <= len(saved):
                 break
         print("Invalid input. Choose a valid character number.")
-
+        #ask the user to choose a save file if it exist
+        #Will loop until a valid save is choosen and checks if the number is within range 
     selected_name = saved[choice - 1]
 
     # Load character
@@ -160,7 +169,7 @@ def load_game():
     except SaveFileCorruptedError:
         print("Error: Save file is corrupted and cannot be loaded.")
         return
-
+    #Attempts to load character and if done right sets the global current_character to whatver was loaded
     # Start game loop
     start_game_loop()
     
@@ -176,16 +185,18 @@ def load_game():
 # ============================================================================
 # GAME LOOP
 # ============================================================================
-
 def game_loop():
     """
     Main game loop - shows game menu and processes actions
     """
     global game_running, current_character
+    #game running controls loop and current char is the active character that was selected
     if current_character is None:
         print("Error: No character loaded!")
         return
     game_running = True
+    #Loop cannot run without a current character
+    #If no chara is there shows error and stops
     
     print(f"\n=== Welcome, {current_character.name}! Your adventure begins. ===")
 
@@ -197,21 +208,23 @@ def game_loop():
         print("4. Combat")
         print("5. Save Game")
         print("6. Exit to Main Menu")
-
+        #Menu repeats as long as game running is active(true)
         choice = input("Choose an option (1-6): ").strip()
-
+        #Strip makes it so spaces don't matter
         if choice == "1":
             print("\n--- CHARACTER INFO ---")
             print(current_character)
 
         elif choice == "2":
             handle_inventory_menu()
-
+            #Calls inventory system
         elif choice == "3":
             handle_quest_menu()
+            #calls quest system
 
         elif choice == "4":
             handle_combat_menu()
+            #calls combat menu
 
         elif choice == "5":
             try:
@@ -266,7 +279,7 @@ def game_menu():
                 return choice
 
         print("Invalid choice. Please enter a number between 1 and 6.")
-    # TODO: Implement game menu
+    # TODO: Implement game menu 
     pass
 
 # ============================================================================
