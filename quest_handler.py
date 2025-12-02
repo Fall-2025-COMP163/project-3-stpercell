@@ -4,7 +4,7 @@ Quest Handler Module - Starter Code
 
 Name: [Shikel Percell]
 
-AI Usage: [Document any AI assistance used]
+AI Usage: [Mainly used for fromatting, debugging, and understanding]
 
 This module handles quest management, dependencies, and completion.
 """
