@@ -652,12 +652,10 @@ def explore():
 def shop():
     """Shop menu for buying/selling items"""
     global current_character, all_items
-
     if current_character is None:
         print("No character loaded.")
         return
-    # Example shop inventory
-    # all_items should be a dictionary: { "Item Name": {"price": X, "type": "consumable/weapon/armor"} }
+
     if not all_items:
         print("The shop has no items available.")
         return
@@ -698,22 +696,19 @@ def shop():
             item_name = item_list[int(selection) - 1]
             item_price = all_items[item_name]["price"]
 
-            item_data = {
-                "cost": item_price,
-                "type": all_items[item_name]["type"]
-            }
+            if current_character.gold < item_price:
+                print("You don't have enough gold.")
+                continue
 
-            # Attempt to add item
             try:
-                success = inventory_system.purchase_item(current_character, item_name, item_data)
-                if success:
-                    print(f"You bought {item_name} for {item_price} gold.")
-                else:
-                    print("You don't have enough gold.")
+                inventory_system.add_item(current_character, item_name)
+                current_character.gold -= item_price
+                print(f"You bought {item_name} for {item_price} gold.")
             except Exception as e:
                 print(f"Cannot buy item: {e}")
+
         # -----------------------------
-        #      OPTION 2: SELL
+        #      OPTION 2: SELL  (FIXED)
         # -----------------------------
         elif choice == "2":
             try:
@@ -728,7 +723,17 @@ def shop():
 
             print("\nYour Inventory:")
             for i, item in enumerate(inv, start=1):
-                sell_price = all_items[item]["price"] // 2 if item in all_items else 1
+
+                # -----------------------------
+                # FIX: safely get cost from all_items OR default to 0
+                # -----------------------------
+                if item in all_items:
+                    sell_cost = all_items[item]["price"]
+                else:
+                    sell_cost = 0
+                sell_price = sell_cost // 2
+                # <<< FIXED
+
                 print(f"{i}. {item} - Sell Price: {sell_price}")
 
             selection = input("Enter item number to sell: ").strip()
@@ -738,21 +743,36 @@ def shop():
                 continue
 
             item_name = inv[int(selection) - 1]
-            sell_price = all_items[item_name]["price"] // 2 if item_name in all_items else 1
 
-            item_data = {
-                "cost": all_items[item_name]["price"],
-                "type": all_items[item_name]["type"]
-            }
+            # -----------------------------
+            # FIX: build item_data matching your test case structure
+            # -----------------------------
+            if item_name in all_items:
+                item_data = {
+                    "cost": all_items[item_name]["price"],
+                    "type": all_items[item_name]["type"]
+                }
+            else:
+                item_data = {"cost": 0, "type": "consumable"}
+            # <<< FIXED
 
             try:
-                gold_given = inventory_system.sell_item(current_character, item_name, item_data)
-                print(f"You sold {item_name} for {gold_given} gold.")
+                # -----------------------------
+                # FIX: Let inventory_system.sell_item() return correct gold
+                # -----------------------------
+                gold_received = inventory_system.sell_item(current_character, item_name, item_data)
+                # <<< FIXED
+
+                current_character.gold += gold_received
+
+                print(f"You sold {item_name} for {gold_received} gold.")
             except Exception as e:
                 print(f"Cannot sell item: {e}")
 
         else:
             print("Invalid choice. Choose 1–3.")
+
+   
         
     # TODO: Implement shop
     # Show available items for purchase
