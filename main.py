@@ -727,7 +727,6 @@ def shop():
 
             print("\nYour Inventory:")
             for i, item in enumerate(inv, start=1):
-                # Sell price = half buy price (safe default)
                 sell_price = all_items[item]["price"] // 2 if item in all_items else 1
                 print(f"{i}. {item} - Sell Price: {sell_price}")
 
@@ -740,16 +739,20 @@ def shop():
             item_name = inv[int(selection) - 1]
             sell_price = all_items[item_name]["price"] // 2 if item_name in all_items else 1
 
-            # Remove item and give gold
+            item_data = {
+                "cost": all_items[item_name]["price"],
+                "type": all_items[item_name]["type"]
+            }
+
             try:
-                inventory_system.remove_item(current_character, item_name)
-                current_character.gold += sell_price
-                print(f"You sold {item_name} for {sell_price} gold.")
+                gold_given = inventory_system.sell_item(current_character, item_name, item_data)
+                print(f"You sold {item_name} for {gold_given} gold.")
             except Exception as e:
                 print(f"Cannot sell item: {e}")
 
         else:
             print("Invalid choice. Choose 1–3.")
+        
     # TODO: Implement shop
     # Show available items for purchase
     # Show current gold    
