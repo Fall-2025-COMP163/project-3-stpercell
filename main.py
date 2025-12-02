@@ -752,7 +752,7 @@ def shop():
             print("Invalid choice. Choose 1–3.")
     # TODO: Implement shop
     # Show available items for purchase
-    # Show current gold
+    # Show current gold    
     # Options: Buy item, Sell item, Back
     # Handle exceptions from inventory_system
     pass
