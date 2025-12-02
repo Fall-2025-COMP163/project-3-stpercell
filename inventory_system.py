@@ -481,7 +481,7 @@ def sell_item(character, item_id, item_data):
         raise ItemNotFoundError(f"Item '{item_id}' not found in inventory.")
 
     # Calculate sell price (half of original cost)
-    cost = item_data.get(item_id, {}).get("cost", 0)
+    cost = item_data.get("cost", 0)
     sell_price = cost // 2
 
     # Remove item from inventory
