@@ -708,7 +708,7 @@ def shop():
                 print(f"Cannot buy item: {e}")
 
         # -----------------------------
-        #      OPTION 2: SELL  (FIXED)
+        #      OPTION 2: SELL (FIXED)
         # -----------------------------
         elif choice == "2":
             try:
@@ -724,16 +724,13 @@ def shop():
             print("\nYour Inventory:")
             for i, item in enumerate(inv, start=1):
 
-                # -----------------------------
-                # FIX: safely get cost from all_items OR default to 0
-                # -----------------------------
+                # FIX 1: Safe cost lookup
                 if item in all_items:
                     sell_cost = all_items[item]["price"]
                 else:
                     sell_cost = 0
-                sell_price = sell_cost // 2
-                # <<< FIXED
 
+                sell_price = sell_cost // 2
                 print(f"{i}. {item} - Sell Price: {sell_price}")
 
             selection = input("Enter item number to sell: ").strip()
@@ -744,36 +741,29 @@ def shop():
 
             item_name = inv[int(selection) - 1]
 
-            # -----------------------------
-            # FIX: build item_data matching your test case structure
-            # -----------------------------
+            # FIX 2: Build correct item_data to match test case format
             if item_name in all_items:
                 item_data = {
                     "cost": all_items[item_name]["price"],
                     "type": all_items[item_name]["type"]
                 }
             else:
+                # If item not in shop list, default cost is 0
                 item_data = {"cost": 0, "type": "consumable"}
-            # <<< FIXED
 
             try:
-                # -----------------------------
-                # FIX: Let inventory_system.sell_item() return correct gold
-                # -----------------------------
+                # FIX 3: This MUST return correct gold amount (25 → 12)
                 gold_received = inventory_system.sell_item(current_character, item_name, item_data)
-                # <<< FIXED
 
                 current_character.gold += gold_received
-
                 print(f"You sold {item_name} for {gold_received} gold.")
+
             except Exception as e:
                 print(f"Cannot sell item: {e}")
 
         else:
             print("Invalid choice. Choose 1–3.")
-
    
-        
     # TODO: Implement shop
     # Show available items for purchase
     # Show current gold    
