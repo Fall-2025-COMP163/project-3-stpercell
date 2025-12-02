@@ -698,19 +698,20 @@ def shop():
             item_name = item_list[int(selection) - 1]
             item_price = all_items[item_name]["price"]
 
-            # Check gold
-            if current_character.gold < item_price:
-                print("You don't have enough gold.")
-                continue
+            item_data = {
+                "cost": item_price,
+                "type": all_items[item_name]["type"]
+            }
 
             # Attempt to add item
             try:
-                inventory_system.add_item(current_character, item_name)
-                current_character.gold -= item_price
-                print(f"You bought {item_name} for {item_price} gold.")
+                success = inventory_system.purchase_item(current_character, item_name, item_data)
+                if success:
+                    print(f"You bought {item_name} for {item_price} gold.")
+                else:
+                    print("You don't have enough gold.")
             except Exception as e:
                 print(f"Cannot buy item: {e}")
-
         # -----------------------------
         #      OPTION 2: SELL
         # -----------------------------
