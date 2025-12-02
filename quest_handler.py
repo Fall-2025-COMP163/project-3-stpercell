@@ -108,24 +108,30 @@ def complete_quest(character, quest_id, quest_data_dict):
     
     quest_info = quest_data_dict[quest_id]
 
+    # Ensure character structures exist
     if "active_quests" not in character:
         character["active_quests"] = []
     if "completed_quests" not in character:
         character["completed_quests"] = []
-    if "xp" not in character:
-        character["xp"] = 0
+    if "experience" not in character:
+        character["experience"] = 0
     if "gold" not in character:
         character["gold"] = 0
 
+    # Must be active
     if quest_id not in character["active_quests"]:
         raise QuestNotActiveError(f"Quest '{quest_id}' is not active.")
     
+    # Move quest
     character["active_quests"].remove(quest_id)
     character["completed_quests"].append(quest_id)
     
+    # Rewards
     xp_reward = quest_info.get("reward_xp", 0)
     gold_reward = quest_info.get("reward_gold", 0)
-    character["xp"] += xp_reward
+
+    # Update character stats
+    character["experience"] += xp_reward
     character["gold"] += gold_reward
     
     return {
