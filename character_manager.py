@@ -4,7 +4,7 @@ Character Manager Module - Starter Code
 
 Name: [Shikel Percell]
 
-AI Usage: [Document any AI assistance used]
+AI Usage: [Used AI for formatting, debugging, and understanding the code itself]
 
 This module handles character creation, loading, and saving.
 """
