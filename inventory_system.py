@@ -2,9 +2,9 @@
 COMP 163 - Project 3: Quest Chronicles
 Inventory System Module - Starter Code
 
-Name: [Your Name Here]
+Name: [Shikel Percell]
 
-AI Usage: [Document any AI assistance used]
+AI Usage: [Mainly used for fromatting, debugging, and understanding]
 
 This module handles inventory management, item usage, and equipment.
 """
