@@ -233,18 +233,19 @@ def equip_weapon(character, item_id, item_data):
         raise ItemNotFoundError(f"Weapon '{item_id}' not found in inventory.")
 
     # Check correct item type
-    item_type = item_data[item_id].get("type")
+    item_type = item_data.get("type")
     if item_type != "weapon":
         raise InvalidItemTypeError(f"Item '{item_id}' is not a weapon.")
+
 
     # Handle unequipping current weapon
     old_weapon = character.get("equipped_weapon")
     message_parts = []
 
     if old_weapon:
-        # Parse old weapon effect and remove it
-        old_effect = item_data[old_weapon].get("effect", "")
-        if ":" in old_effect:
+        # Remove old weapon's stat bonus
+        old_effect = character.get("equipped_weapon_effect", "")
+        if old_effect and ":" in old_effect:
             stat, value_str = old_effect.split(":")
             character[stat] -= int(value_str)
 
@@ -254,7 +255,7 @@ def equip_weapon(character, item_id, item_data):
 
     # Parse new weapon effect
     effect = item_data.get("effect", "")
-    if ":" not in effect:
+    if not effect or ":" not in effect:
         raise InvalidItemTypeError(f"Invalid effect format for weapon '{item_id}'.")
 
     stat, value_str = effect.split(":")
@@ -299,16 +300,16 @@ def equip_armor(character, item_id, item_data):
     
     # Check item exists in inventory
     if item_id not in character.get("inventory", []):
-        raise ItemNotFoundError(f"Weapon '{item_id}' not found in inventory.")
-
+        raise ItemNotFoundError(f"Armor '{item_id}' not found in inventory.")
     # Check correct item type
-    item_type = item_data[item_id].get("type")
+    item_type = item_data.get("type")
     if item_type != "armor":
         raise InvalidItemTypeError(f"Item '{item_id}' is not armor.")
 
     # Handle unequipping current weapon
-    old_weapon = character.get("equipped_armor")
     message_parts = []
+    if old_weapon:
+            old_effect = item_data[old_weapon].get("effect", "")
 
     if old_weapon:
         # Parse old weapon effect and remove it
