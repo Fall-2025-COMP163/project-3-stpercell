@@ -2,9 +2,9 @@
 COMP 163 - Project 3: Quest Chronicles
 Combat System Module - Starter Code
 
-Name: [Your Name Here]
+Name: [Shikel Percell]
 
-AI Usage: [Document any AI assistance used]
+AI Usage: [Mainly used help from the pevious project, ai for fromatting and understanding]
 
 Handles combat mechanics
 """
