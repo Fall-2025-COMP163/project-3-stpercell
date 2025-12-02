@@ -41,29 +41,22 @@ def load_quests(filename="data/quests.txt"):
     # - FileNotFoundError → raise MissingDataFileError
     # - Invalid format → raise InvalidDataFormatError
     # - Corrupted/unreadable data → raise CorruptedDataError
+    quests = {}
     try:
-        if not os.path.exists(filename):
-            raise MissingDataFileError(f"Quest data file not found: {filename}")
-
         with open(filename, "r") as f:
             content = f.read().strip()
-
-        if not content:
-            raise InvalidDataFormatError("Quest file is empty or invalid.")
-
-        # Minimal format check: must contain at least one colon
-        if ":" not in content:
-            raise InvalidDataFormatError("Quest file format not recognized.")
-
-        # FULL parsing not implemented yet—return empty dict for now
-        return {}
-
-    except MissingDataFileError:
-        raise
-    except InvalidDataFormatError:
-        raise
-    except Exception as e:
-        raise CorruptedDataError(f"Unexpected error reading quests: {e}")
+            blocks = content.split("\n\n")  # assume quests are separated by blank lines
+            for block in blocks:
+                quest = {}
+                for line in block.splitlines():
+                    if ":" in line:
+                        key, val = line.split(":", 1)
+                        quest[key.strip()] = val.strip()
+                if "quest_id" in quest:
+                    quests[quest["quest_id"]] = quest
+    except FileNotFoundError:
+        print(f"Quest file '{filename}' not found.")
+    return quests
     pass
 
 def load_items(filename="data/items.txt"):
