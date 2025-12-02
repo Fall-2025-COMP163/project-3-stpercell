@@ -149,3 +149,203 @@ Test files are provided for your learning but are protected. Modifying test file
 - Academic integrity investigation
 
 You can view tests to understand requirements, but any modifications will be automatically detected.
+
+
+
+
+
+
+
+-Documentation-
+
+Module Architecture
+
+1. custom_exceptions.py
+
+Provided by the instructor. Contains all exception classes used across the project.
+No modification was required.
+
+2. game_data.py
+
+Stores all static and configurable game information.
+Responsibilities:
+
+Character class base stats (Warrior, Mage, Rogue, Cleric — required names)
+
+Enemy definitions (goblin, orc, dragon — required types + my custom types)
+
+Item templates and quest rewards
+Purpose: Keeps game balancing data separate from logic so adjustments are simple and safe.
+
+3. character_manager.py
+
+Creates and manages player characters.
+Responsibilities:
+
+Constructing characters with proper stats
+
+Validating class names
+
+Applying abilities, stats, and level-ups
+
+Raising exceptions if invalid classes or stats are used
+Rationale: Central place for anything related to player class identity and capabilities.
+
+4. inventory_system.py
+
+Manages all items a player can acquire.
+Responsibilities:
+
+Adding/removing items
+
+Applying item effects to character stats
+
+Validating inventory capacity
+
+Handling item errors through custom exceptions
+
+5. quest_handler.py
+
+Handles quest logic, rewards, and progression.
+Responsibilities:
+
+Granting XP/gold on quest completion
+
+Checking quest prerequisites
+
+Raising exceptions for invalid quest names or claim attempts
+Keeps progression logic cleanly separated from combat or character creation.
+
+6. combat_system.py
+
+Executes turn-based combat between player and enemy.
+Responsibilities:
+
+Applying damage, abilities, status effects
+
+Validating enemy type
+
+Ending combat on defeat and raising GameOver-style exceptions if needed
+Designed to be self-contained for easy testing.
+
+7. main.py
+
+The game driver.
+Responsibilities:
+
+Loads all modules
+
+Creates characters
+
+Starts quests
+
+Runs combat encounters
+Minimal logic: serves only as the gameplay loop and user interaction layer.
+
+
+
+Exception Strategy
+
+Exceptions are used consistently across modules to enforce correct state transitions and protect the game from invalid data.
+
+When exceptions are raised:
+
+1. Invalid Input (player error)
+Examples:
+
+Selecting a nonexistent character class
+
+Using an item that is not in inventory
+
+Attempting to fight an undefined enemy
+These raise exceptions such as InvalidCharacterClassError, ItemNotFoundError, or UnknownEnemyError.
+
+2. Invalid Game State (logic error)
+Raised when internal assumptions are violated, such as:
+
+Negative health values
+
+Duplicate character creation
+
+Removing items from an empty inventory
+These catch programmer mistakes rather than player mistakes.
+
+3. Flow-Control Exceptions
+Used to signal controlled events:
+
+A character reaching 0 HP triggers a game-over exception
+
+Quest completion may raise a “RewardGranted” exception internally to simplify flow
+
+4. Data Loading Exceptions
+If game_data.py is missing required fields, a structured exception is raised to prevent broken game sessions.
+
+
+
+AI Usage
+
+Planning the architecture: Brainstorming module responsibilities and how to structure data cleanly.
+
+Debugging guidance, explaining error messages and suggesting fix directions.
+
+Writing explanations, helped draft portions of this report.
+
+All core logic, design decisions, balancing choices, and final code were written and verified manually
+
+
+
+How to Play
+1. Run the Program
+
+From the project folder:
+
+python main.py
+
+2. Create a Character
+
+You will be prompted to choose one of the required classes:
+
+Warrior
+
+Mage
+
+Rogue
+
+Cleric
+
+The system automatically loads stats from game_data.py.
+
+3. Begin Your Quest
+
+You can view quests, accept them, and check your inventory.
+
+4. Combat
+
+When encountering an enemy:
+
+Turns alternate between player and enemy
+
+You can attack, use abilities, or use items
+
+Status effects and special abilities activate automatically if conditions are met
+Combat ends when the player or enemy reaches 0 HP.
+
+5. Progression
+
+After fights or quests:
+
+XP increases
+
+Gold is awarded
+
+New items may be gained
+
+Character may level up depending on your design
+
+6. End of Game
+
+The game ends when:
+
+You complete the main quest chain, or
+
+Your HP reaches zero (a GameOver exception is triggered)
