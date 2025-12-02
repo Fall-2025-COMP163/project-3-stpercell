@@ -4,7 +4,7 @@ Main Game Module - Starter Code
 
 Name: [Shikel Percell]
 
-AI Usage: [Document any AI assistance used]
+AI Usage: [Mainly used for fromatting, debugging, and understanding]
 
 This is the main game file that ties all modules together.
 Demonstrates module integration and complete game flow.
