@@ -41,21 +41,20 @@ def load_quests(filename="data/quests.txt"):
     # - FileNotFoundError → raise MissingDataFileError
     # - Invalid format → raise InvalidDataFormatError
     # - Corrupted/unreadable data → raise CorruptedDataError
+    create_default_data_files()  # ensure default file exists
     quests = {}
     try:
         with open(filename, "r") as f:
             content = f.read().strip()
-            blocks = content.split("\n\n")  # assume quests are separated by blank lines
+            if not content:
+                raise InvalidDataFormatError("Quest file is empty.")
+            blocks = content.split("\n\n")
             for block in blocks:
-                quest = {}
-                for line in block.splitlines():
-                    if ":" in line:
-                        key, val = line.split(":", 1)
-                        quest[key.strip()] = val.strip()
-                if "quest_id" in quest:
-                    quests[quest["quest_id"]] = quest
+                lines = block.splitlines()
+                quest = parse_quest_block(lines)
+                quests[quest["quest_id"]] = quest
     except FileNotFoundError:
-        print(f"Quest file '{filename}' not found.")
+        raise MissingDataFileError(f"Quest file '{filename}' not found.")
     return quests
     pass
 
@@ -76,28 +75,21 @@ def load_items(filename="data/items.txt"):
     """
     # TODO: Implement this function
     # Must handle same exceptions as load_quests
+    create_default_data_files()  # ensure default file exists
+    items = {}
     try:
-        if not os.path.exists(filename):
-            raise MissingDataFileError(f"Item data file not found: {filename}")
-
         with open(filename, "r") as f:
             content = f.read().strip()
-
-        if not content:
-            raise InvalidDataFormatError("Item file is empty or invalid.")
-
-        if ":" not in content:
-            raise InvalidDataFormatError("Item file format not recognized.")
-
-        # FULL parsing not implemented yet—return empty dict for now
-        return {}
-
-    except MissingDataFileError:
-        raise
-    except InvalidDataFormatError:
-        raise
-    except Exception as e:
-        raise CorruptedDataError(f"Unexpected error reading items: {e}")
+            if not content:
+                raise InvalidDataFormatError("Item file is empty.")
+            blocks = content.split("\n\n")
+            for block in blocks:
+                lines = block.splitlines()
+                item = parse_item_block(lines)
+                items[item["item_id"]] = item
+    except FileNotFoundError:
+        raise MissingDataFileError(f"Item file '{filename}' not found.")
+    return items
     pass
 
 def validate_quest_data(quest_dict):
