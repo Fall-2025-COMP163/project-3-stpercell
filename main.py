@@ -741,7 +741,7 @@ def shop():
 
             item_name = inv[int(selection) - 1]
 
-            # FIX 2: Build correct item_data to match test case format
+            
             if item_name in all_items:
                 item_data = {
                     "cost": all_items[item_name]["price"],
